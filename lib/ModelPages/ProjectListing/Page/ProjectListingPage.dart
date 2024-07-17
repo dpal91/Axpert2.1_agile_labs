@@ -102,13 +102,17 @@ class _ProjectListingPageState extends State<ProjectListingPage> {
                                 children: <Widget>[
                                   Row(
                                     children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 10.0, left: 10),
-                                        child: Image.asset(
-                                          'assets/images/buzzily-logo.png',
-                                          height: 35,
-                                          width: 125,
-                                          fit: BoxFit.cover,
+                                      Hero(
+                                        tag: 'axpertImage',
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(top: 10.0, left: 10),
+                                          child: Image.asset(
+                                            // 'assets/images/buzzily-logo.png',
+                                            'assets/images/axpert_full.png',
+                                            height: 50,
+                                            width: 160,
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -156,7 +160,11 @@ class _ProjectListingPageState extends State<ProjectListingPage> {
                                                               },
                                                               child: Dismissible(
                                                                   background: Container(
-                                                                    color: Colors.red,
+                                                                    margin: EdgeInsets.only(top: 5, bottom: 5),
+                                                                    decoration: BoxDecoration(
+                                                                        color: Colors.red,
+                                                                        borderRadius:
+                                                                            BorderRadius.horizontal(left: Radius.circular(10))),
                                                                     child: Row(
                                                                       mainAxisAlignment: MainAxisAlignment.start,
                                                                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -177,10 +185,19 @@ class _ProjectListingPageState extends State<ProjectListingPage> {
                                                                     ),
                                                                   ),
                                                                   secondaryBackground: Container(
-                                                                    color: Colors.amber,
-                                                                    child:
-                                                                        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                                                                      Padding(
+                                                                    margin: EdgeInsets.only(top: 5, bottom: 5),
+                                                                    decoration: BoxDecoration(
+                                                                        color: Colors.amber,
+                                                                        borderRadius:
+                                                                            BorderRadius.horizontal(right: Radius.circular(10))),
+                                                                    child: Row(
+                                                                      mainAxisAlignment: MainAxisAlignment.end,
+                                                                      children: [
+                                                                        // Text(
+                                                                        //   "Edit",
+                                                                        //   style: TextStyle(color: Colors.white, fontSize: 18),
+                                                                        // ),
+                                                                        Padding(
                                                                           padding: EdgeInsets.only(right: 10),
                                                                           child: AnimateIcon(
                                                                             onTap: () {}, animateIcon: AnimateIcons.edit,
@@ -189,8 +206,10 @@ class _ProjectListingPageState extends State<ProjectListingPage> {
                                                                             // child: Text(
                                                                             //   "Edit",
                                                                             //   style: TextStyle(color: Colors.white, fontSize: 18),
-                                                                          ))
-                                                                    ]),
+                                                                          ),
+                                                                        )
+                                                                      ],
+                                                                    ),
                                                                   ),
                                                                   confirmDismiss: (direction) async {
                                                                     if (direction == DismissDirection.endToStart) {

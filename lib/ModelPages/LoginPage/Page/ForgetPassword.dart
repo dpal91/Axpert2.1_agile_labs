@@ -5,7 +5,8 @@ import 'package:get/get.dart';
 
 class ForgetPassword extends StatelessWidget {
   ForgetPassword({super.key});
-  ForgetPasswordController forgetPasswordController = Get.put(ForgetPasswordController());
+
+  final ForgetPasswordController forgetPasswordController = Get.put(ForgetPasswordController());
 
   @override
   Widget build(BuildContext context) {
@@ -26,12 +27,15 @@ class ForgetPassword extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0, color: MyColors.blue2, fontFamily: 'redhatsmbold'),
             ),
             actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 20),
-                child: Image.asset(
-                  'assets/images/buzzily-logo.png',
-                  width: 90,
-                  height: 35,
+              Visibility(
+                visible: false,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 20),
+                  child: Image.asset(
+                    'assets/images/buzzily-logo.png',
+                    width: 90,
+                    height: 35,
+                  ),
                 ),
               ),
             ],
@@ -287,7 +291,7 @@ class ForgetPassword extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Image.asset(
-                            'assets/images/buzzily-logo.png',
+                            'assets/images/axpert_full.png',
                             height: MediaQuery.of(context).size.height * 0.05,
                             width: MediaQuery.of(context).size.width * 0.3,
                             fit: BoxFit.fill,
@@ -302,14 +306,79 @@ class ForgetPassword extends StatelessWidget {
                                 fontFamily: 'redhatsmbold'),
                           ),
                           SizedBox(height: 20),
-                          Text(
-                            'Enter email to reset password',
-                            style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                fontSize: MediaQuery.of(context).size.height * 0.02,
-                                color: MyColors.blue2),
+                          Visibility(
+                            visible: false,
+                            child: Text(
+                              'Enter email to reset password',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: MediaQuery.of(context).size.height * 0.02,
+                                  color: MyColors.blue2),
+                            ),
                           ),
                           SizedBox(height: 30),
+                          DropdownButtonFormField(
+                            value: forgetPasswordController.ddSelectedValue.value,
+                            isExpanded: true,
+                            items: forgetPasswordController.dropdownMenuItem().toList(),
+                            onChanged: forgetPasswordController.dropDownItemChanged,
+                            decoration: InputDecoration(
+                              hintStyle: const TextStyle(
+                                fontSize: 15,
+                              ),
+                              filled: true,
+                              fillColor: MyColors.buzzilygrey,
+                              labelStyle: const TextStyle(
+                                fontSize: 15,
+                                fontFamily: 'Proxima_Nova_Regular',
+                              ),
+                              contentPadding: const EdgeInsets.only(left: 10),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                  color: MyColors.white1,
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(color: Colors.blueGrey),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          TextField(
+                            controller: forgetPasswordController.userNameController,
+                            textInputAction: TextInputAction.next,
+                            //keyboardType: TextInputType.emailAddress,
+                            //  enabled: false,
+                            decoration: InputDecoration(
+                              hintText: 'User Name',
+                              errorText: forgetPasswordController.errUserName.value == ""
+                                  ? null
+                                  : forgetPasswordController.errUserName.value,
+                              hintStyle: const TextStyle(
+                                fontSize: 15,
+                              ),
+                              filled: true,
+                              fillColor: MyColors.buzzilygrey,
+                              labelStyle: const TextStyle(
+                                fontSize: 15,
+                                fontFamily: 'Proxima_Nova_Regular',
+                              ),
+                              contentPadding: const EdgeInsets.only(left: 10),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                  color: MyColors.white1,
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(color: Colors.blueGrey),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10),
                           TextField(
                             controller: forgetPasswordController.emailController,
                             textInputAction: TextInputAction.next,
@@ -351,7 +420,7 @@ class ForgetPassword extends StatelessWidget {
                               },
                               child: Container(
                                 height: 50,
-                                decoration: BoxDecoration(color: Colors.blue.shade400, borderRadius: BorderRadius.circular(20)),
+                                decoration: BoxDecoration(color: MyColors.blue2, borderRadius: BorderRadius.circular(20)),
                                 child: Center(
                                   child: Text(
                                     'Proceed',

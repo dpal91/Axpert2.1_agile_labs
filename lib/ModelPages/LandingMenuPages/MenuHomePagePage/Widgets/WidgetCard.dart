@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:axpertflutter/Constants/AppStorage.dart';
 import 'package:axpertflutter/Constants/const.dart';
 import 'package:axpertflutter/ModelPages/LandingMenuPages/MenuHomePagePage/Controllers/MenuHomePageController.dart';
@@ -12,9 +13,9 @@ import 'package:hexcolor/hexcolor.dart';
 class WidgetCard extends StatelessWidget {
   WidgetCard(this.cardModel, {super.key});
 
-  CardModel cardModel;
-  AppStorage appStorage = AppStorage();
-  MenuHomePageController menuHomePageController = Get.find();
+  final CardModel cardModel;
+  final AppStorage appStorage = AppStorage();
+  final MenuHomePageController menuHomePageController = Get.find();
 
   // MenuHomePageController menuHomePageController = Get.find();
 
@@ -26,8 +27,8 @@ class WidgetCard extends StatelessWidget {
       decoration: BoxDecoration(
           color: HexColor(menuHomePageController.getCardBackgroundColor(cardModel.colorcode.trim())), // ?? "ffffff"),
           borderRadius: BorderRadius.circular(10),
-          // boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 20)] ,
-          border: Border.all(width: 2, color: HexColor(menuHomePageController.getCardBackgroundColor(cardModel.colorcode.trim())))),
+          // boxShadow: [BoxShadow(color: Colors.grey.shade400, blurRadius: 7)] ,
+                    border: Border.all(width: 1, color: Colors.grey.withOpacity(0.4))),
       child: Padding(
         padding: EdgeInsets.only(left: 20, top: 10, right: 2),
         child: Column(
@@ -39,13 +40,15 @@ class WidgetCard extends StatelessWidget {
                 Align(
                   alignment: Alignment.topLeft,
                   child: CachedNetworkImage(
-                    imageUrl: Const.getFullProjectUrl("CustomPages/icons/homepageicon/") + cardModel.caption + '.png',
-                    errorWidget: (context, url, error) => Image.network(Const.getFullProjectUrl('CustomPages/icons/homepageicon/default.png')),
+                    imageUrl: Const.getFullProjectUrl("images/homepageicon/") + cardModel.caption + '.png',
+                    errorWidget: (context, url, error) =>
+                        Image.network(Const.getFullProjectUrl('images/homepageicon/default.png')), //'CustomPages/icons/homepageicon/default.png'
                     width: 40,
                   ),
                 ),
                 Visibility(
-                  visible: menuHomePageController.actionData[cardModel.caption] == null ? false : true,
+                  visible:
+                      menuHomePageController.actionData[cardModel.caption] == null && cardModel.moreoption.isEmpty ? false : true,
                   child: Align(
                       alignment: Alignment.topRight,
                       child: IconButton(
@@ -56,17 +59,14 @@ class WidgetCard extends StatelessWidget {
               ],
             ),
             menuHomePageController.actionData[cardModel.caption] == null ? SizedBox(height: 10) : SizedBox(height: 4),
-            GestureDetector(
-              onTap: () => captionOnTapFunction(cardModel),
-              child: Padding(
-                padding: const EdgeInsets.only(top: 5, bottom: 2, right: 5),
-                child: FittedBox(
-                  fit: BoxFit.fitWidth,
-                  child: Text(
-                    cardModel.caption,
-                    style: GoogleFonts.roboto(textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: HexColor("#444444"))),
-                  ),
-                ),
+            Padding(
+              padding: const EdgeInsets.only(top: 5, bottom: 2, right: 5),
+              child: AutoSizeText(
+                cardModel.caption,
+                maxLines: 2,
+                textAlign: TextAlign.left,
+                style: GoogleFonts.roboto(
+                    textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: HexColor("#444444"))),
               ),
             ),
           ],
@@ -75,9 +75,15 @@ class WidgetCard extends StatelessWidget {
     );
   }
 
-  showMenuDialog(CardModel cardModel) {
-    List optionLists = menuHomePageController.actionData[cardModel.caption] == null ? [] : menuHomePageController.actionData[cardModel.caption];
-    if (!optionLists.isEmpty) {
+ showMenuDialog(CardModel cardModel) async {
+    //call api if needed
+    if (cardModel.caption.toLowerCase().contains("attendance")) {
+      await menuHomePageController.getPunchINData();
+    }
+    //ends
+    List optionLists =
+        menuHomePageController.actionData[cardModel.caption] == null ? [] : menuHomePageController.actionData[cardModel.caption];
+    if (!optionLists.isEmpty || !cardModel.moreoption.isEmpty) {
       Get.dialog(Dialog(
         backgroundColor: Colors.transparent,
         child: SingleChildScrollView(
@@ -134,7 +140,10 @@ class WidgetCard extends StatelessWidget {
       ));
     } else {
       Get.snackbar("Oops!", "Nothing to Show",
-          backgroundColor: Colors.grey, colorText: Colors.black, snackPosition: SnackPosition.BOTTOM, duration: Duration(seconds: 1));
+          backgroundColor: Colors.grey,
+          colorText: Colors.black,
+          snackPosition: SnackPosition.BOTTOM,
+          duration: Duration(seconds: 1));
     }
   }
 
@@ -158,8 +167,7 @@ class WidgetCard extends StatelessWidget {
         stIndex = item.indexOf("\"", endIndex + 1);
       }
       var singleList = item.split(' ');
-      var btnID = "", btnType = "", btnName = "", btnOpen = "", btnexeJs = "";
-      btnID = singleList[0];
+      var btnType = "", btnName = "", btnOpen = "", btnexeJs = "";
       btnType = singleList[1];
       //if (singleList.indexOf("button") >= 0) btnType = singleList[singleList.indexOf("button") - 1];
       if (singleList.indexOf("open") >= 0) btnOpen = singleList[singleList.indexOf("open") + 1];
@@ -171,45 +179,61 @@ class WidgetCard extends StatelessWidget {
       btnexeJs = btnexeJs.replaceAll('^', ' ');
 
       if (btnName != "") {
-        widget = ElevatedButton(
-            style: ButtonStyle(
-              padding: MaterialStateProperty.all(EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5)),
-            ),
-            onPressed: () {
-              Get.back();
-              menuHomePageController.openBtnAction(btnType, btnOpen);
-            },
-            child: FittedBox(fit: BoxFit.fitWidth, child: Text(btnName)));
+        // widget = Container();
+        if (btnName.toUpperCase() == "PUNCH IN") {
+          widget = ElevatedButton(
+              style: !menuHomePageController.isShowPunchIn.value
+                  ? ButtonStyle(
+                      padding: MaterialStateProperty.all(EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5)),
+                      backgroundColor: MaterialStateColor.resolveWith((states) => Colors.grey))
+                  : ButtonStyle(padding: MaterialStateProperty.all(EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5))),
+              onPressed: menuHomePageController.isShowPunchIn.value
+                  ? () {
+                      menuHomePageController.onClick_PunchIn();
+                    }
+                  : null,
+              // onPressed: () {
+              //   // if (btnOpen != "") Get.back();
+              //   // menuHomePageController.openBtnAction(btnType, btnOpen);
+              // },
+              child: FittedBox(fit: BoxFit.fitWidth, child: Text(btnName)));
+        } else {
+          if (btnName.toUpperCase() == "PUNCH OUT") {
+            widget = ElevatedButton(
+                style: !menuHomePageController.isShowPunchOut.value
+                    ? ButtonStyle(
+                        padding: MaterialStateProperty.all(EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5)),
+                        backgroundColor: MaterialStateColor.resolveWith((states) => Colors.grey))
+                    : ButtonStyle(padding: MaterialStateProperty.all(EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5))),
+                onPressed: menuHomePageController.isShowPunchOut.value
+                    ? () {
+                        menuHomePageController.onClick_PunchOut();
+                      }
+                    : null,
+                // onPressed: () {
+                //   // if (btnOpen != "") Get.back();
+                //   // menuHomePageController.openBtnAction(btnType, btnOpen);
+                // },
+                child: FittedBox(fit: BoxFit.fitWidth, child: Text(btnName)));
+          } else {
+            widget = ElevatedButton(
+                style: btnOpen == ""
+                    ? ButtonStyle(
+                        padding: MaterialStateProperty.all(EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5)),
+                        backgroundColor: MaterialStateColor.resolveWith((states) => Colors.grey))
+                    : ButtonStyle(padding: MaterialStateProperty.all(EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5))),
+                onPressed: () {
+                  if (btnOpen != "") Get.back();
+                  menuHomePageController.openBtnAction(btnType, btnOpen);
+                },
+                child: FittedBox(fit: BoxFit.fitWidth, child: Text(btnName)));
+          }
+        }
+
         widgeList.add(widget);
         widgeList.add(SizedBox(width: 10));
       }
     }
     return widgeList;
-  }
-
-  captionOnTapFunction(CardModel cardModel) {
-    var link_id = cardModel.stransid;
-    var validity = false;
-    if (link_id.toLowerCase().startsWith('h')) {
-      if (link_id.toLowerCase().contains("hp")) {
-        link_id = link_id.toLowerCase().replaceAll("hp", "h");
-      }
-      validity = true;
-    } else {
-      if (link_id.toLowerCase().startsWith('i')) {
-        validity = true;
-      } else {
-        if (link_id.toLowerCase().startsWith('t')) {
-          validity = true;
-        } else
-          validity = false;
-      }
-    }
-    if (validity) {
-      // print(
-      //     "https://app.buzzily.com/run/aspx/AxMain.aspx?authKey=AXPERT-ARMSESSION-1ed2b2a1-e6f9-4081-b7cc-5ddcf50d8690&pname=" +
-      //         cardModel.stransid);
-      menuHomePageController.openBtnAction("button", link_id);
-    }
   }
 }

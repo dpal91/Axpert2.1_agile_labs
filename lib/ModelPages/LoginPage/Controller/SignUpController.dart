@@ -113,6 +113,7 @@ class SignUpController extends GetxController {
       userMobileVisible.value = true;
       userEmaiVisible.value = true;
     }
+    clearFieldValues();
   }
 
   evaluteError(errMsg) {
@@ -202,7 +203,7 @@ class SignUpController extends GetxController {
       var url = Const.getFullARMUrl(ServerConnections.API_ADDUSER);
       var responses = await serverConnections.postToServer(url: url, body: body);
       try {
-        if (responses != "" && !responses.toString().toLowerCase().contains("error")) {
+        if (responses != "") {
           var jsonResponse = jsonDecode(responses);
           if (responses.toString().toLowerCase().contains("otp")) {
             otpAttempts.value = jsonResponse["result"]["otpattemptsleft"];
@@ -265,7 +266,7 @@ class SignUpController extends GetxController {
     var url = Const.getFullARMUrl(ServerConnections.API_OTP_VALIDATE_USER);
     var responses = await serverConnections.postToServer(url: url, body: jsonEncode(otpBody));
 
-    if (responses != "" && !responses.toString().toLowerCase().contains("error")) {
+    if (responses != "") {
       var jsonResp = jsonDecode(responses);
       if (jsonResp['result']['success'].toString() == "false") {
         errOtp.value = jsonResp['result']['message'];
@@ -286,5 +287,14 @@ class SignUpController extends GetxController {
     }
     reSendOtpCount++;
     LoadingScreen.dismiss();
+  }
+
+  clearFieldValues() {
+    userIdController.clear();
+    userNameController.clear();
+    userPassController.clear();
+    userConfirmPassController.clear();
+    userEmailController.clear();
+    userMobileController.clear();
   }
 }

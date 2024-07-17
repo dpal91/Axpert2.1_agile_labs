@@ -6,7 +6,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class MenuCalendarPage extends StatelessWidget {
   MenuCalendarPage({super.key});
-  MenuCalendarPageController menuCalendarPageController = Get.put(MenuCalendarPageController());
+  final MenuCalendarPageController menuCalendarPageController = Get.put(MenuCalendarPageController());
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +119,8 @@ class MenuCalendarPage extends StatelessWidget {
               controller: menuCalendarPageController.calendarController,
             ),
           ),
-        )
+        ),
+        SizedBox(height: Get.height * 0.1)
       ],
     );
   }

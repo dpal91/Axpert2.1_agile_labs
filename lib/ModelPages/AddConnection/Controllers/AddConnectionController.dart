@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:axpertflutter/Constants/AppStorage.dart';
 import 'package:axpertflutter/Constants/CommonMethods.dart';
 import 'package:axpertflutter/Constants/Routes.dart';
@@ -106,7 +107,7 @@ class AddConnectionController extends GetxController {
       baseUrl += baseUrl.endsWith("/") ? "" : "/";
       var url = baseUrl + ServerConnections.API_GET_APPSTATUS;
       final data = await serverConnections.getFromServer(url: url);
-      LoadingScreen.dismiss();
+
       if (data != "" && data.toString().toLowerCase().contains("running successfully".toLowerCase())) {
         //check whether the entered Connection name is proper
         Future<bool> isValidConnName = validateConnectionName(baseUrl);
@@ -120,6 +121,18 @@ class AddConnectionController extends GetxController {
           var json = projectModel.toJson();
           saveDatAndRedirect(projectModel, json, isQr: true);
         }
+      }
+      LoadingScreen.dismiss();
+    } else {
+      if (isQr) {
+        Get.snackbar(
+          "Invalid!",
+          "Please choose a valid QR Code",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        qrViewController!.resumeCamera();
       }
     }
   }
@@ -223,7 +236,7 @@ class AddConnectionController extends GetxController {
     conNameController.text = projectModel.projectname;
     conCaptionController.text = projectModel.projectCaption;
     tempProjectName = projectModel.projectname;
-
+    errArmUrl.value = errCaption.value = errCode.value = errName.value = errWebUrl.value = '';
     Get.toNamed(Routes.AddNewConnection, arguments: [2]);
   }
 
@@ -261,9 +274,25 @@ class AddConnectionController extends GetxController {
         if (cached == projectName) appStorage.remove(AppStorage.CACHED);
       }
     }
+    deleteCredentials(projectName);
     projectListingController.getConnections();
     deleted.value = true;
     projectListingController.needRefresh.value = true;
+  }
+
+  void deleteCredentials(projectName) {
+    print("project name to delete: $projectName");
+    Map users = appStorage.retrieveValue(AppStorage.USERID) ?? {};
+    users.remove(projectName);
+    appStorage.storeValue(AppStorage.USERID, users);
+
+    var passes = appStorage.retrieveValue(AppStorage.USER_PASSWORD) ?? {};
+    passes.remove(projectName);
+    appStorage.storeValue(AppStorage.USER_PASSWORD, passes);
+
+    var groups = appStorage.retrieveValue(AppStorage.USER_GROUP) ?? {};
+    groups.remove(projectName);
+    appStorage.storeValue(AppStorage.USER_GROUP, groups);
   }
 
   void decodeQRResult(String data) {
@@ -317,7 +346,7 @@ class AddConnectionController extends GetxController {
     var url = baseUrl + ServerConnections.API_GET_SIGNINDETAILS;
     var body = "{\"appname\":\"" + conNameController.text.trim() + "\"}";
     final response = await serverConnections.postToServer(url: url, body: body);
-    if (response != "" || !response.toString().toLowerCase().contains("error")) {
+    if (response != "") {
       var json = jsonDecode(response);
       if (json["result"]["message"].toString().toLowerCase() == "success")
         return true;

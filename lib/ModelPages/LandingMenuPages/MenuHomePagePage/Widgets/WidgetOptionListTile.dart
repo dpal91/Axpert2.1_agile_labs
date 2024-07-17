@@ -6,23 +6,24 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 class WidgetOptionListTile extends StatelessWidget {
-  CardOptionModel cardOptionModel;
+  final CardOptionModel cardOptionModel;
 
   WidgetOptionListTile(CardOptionModel this.cardOptionModel, {super.key});
 
-  MenuHomePageController menuHomePageController = Get.find();
+  final MenuHomePageController menuHomePageController = Get.find();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 60,
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1))),
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1, color: Colors.grey))),
       child: Padding(
         padding: EdgeInsets.only(left: 10, right: 10),
         child: Row(
           children: [
             Visibility(
-                visible: cardOptionModel.cardicon.toString() == "" ? false : true, child: Icon(showIcons(cardOptionModel.cardicon.toString()))),
+                visible: cardOptionModel.cardicon.toString() == "" ? false : true,
+                child: Icon(showIcons(cardOptionModel.cardicon.toString()))),
             Expanded(
               child: Center(
                 child: Padding(
@@ -41,7 +42,9 @@ class WidgetOptionListTile extends StatelessWidget {
                           Get.back();
                           menuHomePageController.openBtnAction("button", cardOptionModel.link);
                         },
-                        child: Text(cardOptionModel.text)),
+                        child: Text(
+                          cardOptionModel.text,
+                        )),
                   )
                 : Expanded(
                     child: Center(

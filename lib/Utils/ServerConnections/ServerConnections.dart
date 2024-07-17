@@ -15,18 +15,33 @@ class ServerConnections {
   static const String API_GET_APPSTATUS = "api/v1/ARMAppStatus";
   static const String API_ADDUSER = "api/v1/ARMAddUser";
   static const String API_OTP_VALIDATE_USER = "api/v1/ARMValidateAddUser";
-  static const String API_FORGETPASSWORD = "api/v1/ARMForgetPassword";
+  static const String API_FORGOTPASSWORD = "api/v1/ARMForgotPassword";
   static const String API_VALIDATE_FORGETPASSWORD = "api/v1/ARMValidateForgotPassword";
   static const String API_GOOGLESIGNIN_SSO = "api/v1/ARMSigninSSO";
   static const String API_CONNECTTOAXPERT = "api/v1/ARMConnectToAxpert";
   static const String API_GET_HOMEPAGE_CARDS = "api/v1/ARMGetHomePageCards";
   static const String API_GET_HOMEPAGE_CARDSDATASOURCE = "api/v1/ARMGetDataResponse";
-  static const String API_GET_PENDING_ACTIVELIST = "api/v1/ARMGetActiveTasks";
+  // static const String API_GET_PENDING_ACTIVELIST = "api/v1/ARMGetActiveTasks"; //OLD
   static const String API_MOBILE_NOTIFICATION = "api/v1/ARMMobileNotification";
   static const String API_GET_DASHBOARD_DATA = "api/v1/ARMGetCardsData";
+  static const String API_CHANGE_PASSWORD = "api/v1/ARMChangePassword";
 
   static const String API_GET_MENU = "api/v1/ARMGetMenu";
   static const String API_SIGNOUT = "api/v1/ARMSignOut";
+
+  static const String API_GET_PENDING_ACTIVETASK = "api/v1/ARMGetPendingActiveTasks";
+  static const String API_GET_PENDING_ACTIVETASK_COUNT = "api/v1/ARMGetPendingActiveTasksCount";
+  static const String API_GET_ACTIVETASK_DETAILS = "api/v1/ARMPEGGetTaskDetails";
+  static const String API_GET_FILTERED_PENDING_TASK = "api/v1/ARMGetFilteredActiveTasks";
+  static const String API_GET_COMPLETED_ACTIVETASK = "api/v1/ARMGetCompletedTasks";
+  static const String API_GET_COMPLETED_ACTIVETASK_COUNT = "api/v1/ARMGetCompletedTasksCount";
+  static const String API_GET_FILTERED_COMPLETED_TASK = "api/v1/ARMGetFilteredCompletedTasks";
+  static const String API_DO_TASK_ACTIONS = "api/v1/ARMDoTaskAction";
+  static const String API_GET_BULK_APPROVAL_COUNT = "api/v1/ARMGetBulkApprovalCount";
+  static const String API_GET_BULK_ACTIVETASKS = "api/v1/ARMGetBulkActiveTasks";
+  static const String API_GET_SENDTOUSERS = "api/v1/ARMGetSendToUsers";
+
+
   AppStorage appStorage = AppStorage();
 
   ServerConnections() {
@@ -54,7 +69,7 @@ class ServerConnections {
         // print("Post header: $header");
         print("API_POST_BODY:" + body);
         var response = await client.post(Uri.parse(url), headers: header, body: body);
-        // print("API_RESPONSE_DATA: ${response.body}\n");
+        print("API_RESPONSE_DATA: $API_NAME: ${response.body}\n");
         // print("");
         if (response.statusCode == 200) return response.body;
         if (response.statusCode == 404) {

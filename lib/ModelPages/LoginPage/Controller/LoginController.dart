@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:axpertflutter/Constants/AppStorage.dart';
 import 'package:axpertflutter/Constants/CommonMethods.dart';
+import 'package:axpertflutter/Constants/MyColors.dart';
 import 'package:axpertflutter/Constants/Routes.dart';
 import 'package:axpertflutter/Constants/const.dart';
 import 'package:axpertflutter/Utils/ServerConnections/ServerConnections.dart';
@@ -27,16 +28,27 @@ class LoginController extends GetxController {
   var errUserName = ''.obs;
   var errPassword = ''.obs;
   var fcmId;
+  var willAuthenticate = false.obs;
 
   LoginController() {
     fetchUserTypeList();
-    userNameController.text = appStorage.retrieveValue(AppStorage.USERID) ?? "";
-    userPasswordController.text = appStorage.retrieveValue(AppStorage.USER_PASSWORD) ?? "";
-    ddSelectedValue.value = appStorage.retrieveValue(AppStorage.USER_GROUP) ?? "";
+    fetchRememberedData();
     dropDownItemChanged(ddSelectedValue);
-    if (userNameController.text.toString() != "") rememberMe.value = true;
+    if (userNameController.text.toString().trim() != "") rememberMe.value = true;
+
+    setWillAuthenticate();
+
     FirebaseMessaging messaging = FirebaseMessaging.instance;
     messaging.getToken().then((value) => fcmId = value);
+  }
+
+  setWillAuthenticate() async {
+    var willAuth = await getWillBiometricAuthenticateForThisUser(userNameController.text.toString().trim());
+    print(("Login willAuth: $willAuth"));
+    if (willAuth != null) {
+      willAuthenticate.value = willAuth;
+    }
+    displayAuthenticationDialog();
   }
 
   fetchUserTypeList() async {
@@ -48,17 +60,18 @@ class LoginController extends GetxController {
     var body = Const.getAppBody();
     var data = await serverConnections.postToServer(url: url, body: body);
     LoadingScreen.dismiss();
-
-    if (data != "" && !data.toString().contains("error")) {
+    if (data != "") {
       data = data.toString().replaceAll("null", "\"\"");
 
       // print(data);
 
       var jsonData = jsonDecode(data)['result']['data'] as List;
       userTypeList.clear();
+
       for (var item in jsonData) {
         String val = item["usergroup"].toString();
-        userTypeList.add(CommonMethods.capitalize(val));
+        val = CommonMethods.capitalize(val);
+        if (!userTypeList.contains(val)) userTypeList.add(val);
       }
       userTypeList..sort((a, b) => a.toString().toLowerCase().compareTo(b.toString().toLowerCase()));
       if (ddSelectedValue.value == "") {
@@ -75,18 +88,18 @@ class LoginController extends GetxController {
       MaterialState.focused,
     };
     if (states.any(interactiveStates.contains)) {
-      return Colors.blue;
+      return MyColors.blue2;
     }
-    return Colors.blue;
+    return MyColors.blue2;
   }
 
-  fetchSignInDetail() async {
-    LoadingScreen.show();
-    var url = Const.getFullARMUrl(ServerConnections.API_GET_SIGNINDETAILS);
-    var body = Const.getAppBody();
-    var data = await serverConnections.postToServer(url: url, body: body);
-    LoadingScreen.dismiss();
-  }
+  // fetchSignInDetail() async {
+  //   LoadingScreen.show();
+  //   var url = Const.getFullARMUrl(ServerConnections.API_GET_SIGNINDETAILS);
+  //   var body = Const.getAppBody();
+  //   await serverConnections.postToServer(url: url, body: body);
+  //   LoadingScreen.dismiss();
+  // }
 
   dropdownMenuItem() {
     List<DropdownMenuItem<String>> myList = [];
@@ -138,47 +151,41 @@ class LoginController extends GetxController {
     return jsonEncode(body);
   }
 
-  void loginButtonClicked() async {
+  void loginButtonClicked({bodyArgs = ''}) async {
     if (validateForm()) {
       FocusManager.instance.primaryFocus?.unfocus();
       LoadingScreen.show();
-
-      var body = await getSignInBody();
+      var body = bodyArgs == '' ? await getSignInBody() : bodyArgs;
       var url = Const.getFullARMUrl(ServerConnections.API_SIGNIN);
       // print(body.toString());
       // var response = await http.post(Uri.parse(url),
       //     headers: {"Content-Type": "application/json"}, body: body);
       // var data = serverConnections.parseData(response);
       var response = await serverConnections.postToServer(url: url, body: body);
-      LoadingScreen.dismiss();
-
-      if (response != "" || !response.toString().toLowerCase().contains("error")) {
+      if (response != "") {
         var json = jsonDecode(response);
         // print(json["result"]["sessionid"].toString());
         if (json["result"]["success"].toString().toLowerCase() == "true") {
           await appStorage.storeValue(AppStorage.TOKEN, json["result"]["token"].toString());
           await appStorage.storeValue(AppStorage.SESSIONID, json["result"]["sessionid"].toString());
-          await appStorage.storeValue(AppStorage.USER_NAME, userNameController.text);
-          await appStorage.storeValue(AppStorage.LAST_LOGIN_DATA, body);
+          await appStorage.storeValue(AppStorage.USER_NAME, userNameController.text.trim());
+          await appStorage.storeValue(AppStorage.USER_CHANGE_PASSWORD, json["result"]["ChangePassword"].toString());
+          storeLastLoginData(body);
+          print("User_change_password: ${appStorage.retrieveValue(AppStorage.USER_CHANGE_PASSWORD)}");
           //Save Data
           if (rememberMe.value) {
-            await appStorage.storeValue(AppStorage.USERID, userNameController.text);
-            await appStorage.storeValue(AppStorage.USER_PASSWORD, userPasswordController.text);
-            await appStorage.storeValue(AppStorage.USER_GROUP, ddSelectedValue.value);
+            rememberCredentials();
           } else {
-            appStorage.remove(AppStorage.USERID);
-            appStorage.remove(AppStorage.USER_PASSWORD);
-            appStorage.remove(AppStorage.USER_GROUP);
+            dontRememberCredentials();
           }
 
-          _processLoginAndGoToHomePage();
+          await _processLoginAndGoToHomePage();
         } else {
           Get.snackbar("Error ", json["result"]["message"],
               snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.redAccent, colorText: Colors.white);
         }
       }
-
-      // print(data);
+      LoadingScreen.dismiss();
     }
   }
 
@@ -208,8 +215,7 @@ class LoginController extends GetxController {
 
         var url = Const.getFullARMUrl(ServerConnections.API_GOOGLESIGNIN_SSO);
         var resp = await serverConnections.postToServer(url: url, body: jsonEncode(body));
-        LoadingScreen.dismiss();
-        if (resp != "" && !resp.toString().contains("error")) {
+        if (resp != "") {
           var jsonResp = jsonDecode(resp);
           // print(jsonResp);
           if (jsonResp['result']['success'].toString() == "false") {
@@ -220,15 +226,17 @@ class LoginController extends GetxController {
             await appStorage.storeValue(AppStorage.SESSIONID, jsonResp["result"]["sessionid"].toString());
             await appStorage.storeValue(AppStorage.USER_NAME, googleUser.email.toString());
             //remove rememberer data
-            appStorage.remove(AppStorage.USERID);
-            appStorage.remove(AppStorage.USER_PASSWORD);
-            appStorage.remove(AppStorage.USER_GROUP);
-            _processLoginAndGoToHomePage();
+            // appStorage.remove(AppStorage.USERID);
+            // appStorage.remove(AppStorage.USER_PASSWORD);
+            // appStorage.remove(AppStorage.USER_GROUP);
+            dontRememberCredentials();
+            await _processLoginAndGoToHomePage();
           }
         } else {
           Get.snackbar("Error", "Some Error occured",
               backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
         }
+        LoadingScreen.dismiss();
         // print(resp);
         // print(googleUser);
       }
@@ -249,20 +257,17 @@ class LoginController extends GetxController {
     // getArmMenu
 
     var jsonResp = jsonDecode(connectResp);
-    if (jsonResp != "" && !jsonResp.toString().contains("error")) {
+    if (jsonResp != "") {
       if (jsonResp['result']['success'].toString() == "true") {
-        Get.offAllNamed(Routes.LandingPage);
+        // Get.offAllNamed(Routes.LandingPage);
       } else {
-        showErrorSnack();
+        var message = jsonResp['result']['message'].toString();
+        showErrorSnack(title: "Error - Connect To Axpert", message: message);
       }
     } else {
       showErrorSnack();
     }
-  }
-
-  showErrorSnack() {
-    Get.snackbar("Error", "Server busy, Please try again later.",
-        snackPosition: SnackPosition.BOTTOM, colorText: Colors.white, backgroundColor: Colors.red);
+    Get.offAllNamed(Routes.LandingPage);
   }
 
   _callApiForMobileNotification() async {
@@ -279,12 +284,95 @@ class LoginController extends GetxController {
 
   getVersionName() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-
     String appName = packageInfo.appName;
     String packageName = packageInfo.packageName;
     var version = packageInfo.version;
     String buildNumber = packageInfo.buildNumber;
-
+    Const.APP_VERSION = version;
     return version;
+  }
+
+  void rememberCredentials() {
+    int count = 1;
+    try {
+      count++;
+      var users = appStorage.retrieveValue(AppStorage.USERID) ?? {};
+      users[Const.PROJECT_NAME] = userNameController.text.trim();
+      appStorage.storeValue(AppStorage.USERID, users);
+
+      var passes = appStorage.retrieveValue(AppStorage.USER_PASSWORD) ?? {};
+      passes[Const.PROJECT_NAME] = userPasswordController.text;
+      appStorage.storeValue(AppStorage.USER_PASSWORD, passes);
+
+      var groups = appStorage.retrieveValue(AppStorage.USER_GROUP) ?? {};
+      groups[Const.PROJECT_NAME] = ddSelectedValue.value;
+      appStorage.storeValue(AppStorage.USER_GROUP, groups);
+    } catch (e) {
+      appStorage.remove(AppStorage.USERID);
+      appStorage.remove(AppStorage.USER_PASSWORD);
+      appStorage.remove(AppStorage.USER_GROUP);
+      if (count < 10) rememberCredentials();
+    }
+  }
+
+  void dontRememberCredentials() {
+    Map users = appStorage.retrieveValue(AppStorage.USERID) ?? {};
+    users.remove(Const.PROJECT_NAME);
+    appStorage.storeValue(AppStorage.USERID, users);
+
+    var passes = appStorage.retrieveValue(AppStorage.USER_PASSWORD) ?? {};
+    passes.remove(Const.PROJECT_NAME);
+    appStorage.storeValue(AppStorage.USER_PASSWORD, passes);
+
+    var groups = appStorage.retrieveValue(AppStorage.USER_GROUP) ?? {};
+    groups.remove(Const.PROJECT_NAME);
+    appStorage.storeValue(AppStorage.USER_GROUP, groups);
+  }
+
+  void fetchRememberedData() {
+    try {
+      var users = appStorage.retrieveValue(AppStorage.USERID) ?? {};
+      print(users);
+      userNameController.text = users[Const.PROJECT_NAME].trim() ?? "";
+
+      var passes = appStorage.retrieveValue(AppStorage.USER_PASSWORD) ?? {};
+      userPasswordController.text = passes[Const.PROJECT_NAME] ?? "";
+
+      var groups = appStorage.retrieveValue(AppStorage.USER_GROUP) ?? {};
+      ddSelectedValue.value = groups[Const.PROJECT_NAME] ?? "Power";
+    } catch (e) {
+      // appStorage.remove(AppStorage.USERID);
+      // appStorage.remove(AppStorage.USER_PASSWORD);
+      // appStorage.remove(AppStorage.USER_GROUP);
+    }
+  }
+
+  void displayAuthenticationDialog() async {
+    if (willAuthenticate == true) {
+      try {
+        if (await showBiometricDialog()) {
+          loginButtonClicked(bodyArgs: retrieveLastLoginData());
+        }
+      } catch (e) {
+        print(e.toString());
+        if (e.toString().contains('NotAvailable') && e.toString().contains('Authentication failure'))
+          showErrorSnack(title: "Oops!", message: "Only Biometric is allowed.");
+      }
+    }
+  }
+
+  void storeLastLoginData(body) {
+    AppStorage appStorage = AppStorage();
+    var projectName = Const.PROJECT_NAME;
+    Map lastData = appStorage.retrieveValue(AppStorage.LAST_LOGIN_DATA) ?? {};
+    lastData[projectName] = body;
+    appStorage.storeValue(AppStorage.LAST_LOGIN_DATA, lastData);
+  }
+
+  retrieveLastLoginData() {
+    AppStorage appStorage = AppStorage();
+    var projectName = Const.PROJECT_NAME;
+    Map lastData = appStorage.retrieveValue(AppStorage.LAST_LOGIN_DATA) ?? {};
+    return lastData[projectName] ?? '';
   }
 }

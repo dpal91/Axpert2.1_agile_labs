@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:axpertflutter/Constants/Routes.dart';
-import 'package:axpertflutter/ModelPages/LoginPage/Controller/LoginController.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -75,8 +74,8 @@ doRefresh(String currentRoute) {
   print(currentRoute);
   switch (currentRoute) {
     case Routes.Login:
-      LoginController loginController = Get.find();
-      loginController.fetchUserTypeList();
+      // LoginController loginController = Get.find();
+      // loginController.fetchUserTypeList();
       break;
     default:
       break;

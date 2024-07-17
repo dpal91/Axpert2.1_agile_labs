@@ -9,7 +9,7 @@ import 'package:get/get.dart';
 
 class ProjectItemListTile extends StatelessWidget {
   String? keyValue;
-  AppStorage appStorage = AppStorage();
+  final AppStorage appStorage = AppStorage();
 
   ProjectItemListTile(String value) {
     keyValue = value;
@@ -38,11 +38,13 @@ class ProjectItemListTile extends StatelessWidget {
         shadowColor: MyColors.white1,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
+          side: BorderSide(width: 1, color: Colors.grey.shade300),
         ),
         child: Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 5),
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <Widget>[
               CircleAvatar(
+                backgroundColor: MyColors.blue2,
                 child: Text(projectModel!.projectname.characters.first.toUpperCase()),
               ),
               Container(

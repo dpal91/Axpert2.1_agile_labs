@@ -7,7 +7,7 @@ import 'package:hexcolor/hexcolor.dart';
 
 class WidgetLandingAppBar extends StatelessWidget implements PreferredSizeWidget {
   WidgetLandingAppBar({super.key});
-  LandingPageController landingPageController = Get.find();
+  final LandingPageController landingPageController = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +19,13 @@ class WidgetLandingAppBar extends StatelessWidget implements PreferredSizeWidget
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Image.asset(
-              "assets/images/axpert.png",
+              "assets/images/axpert_full.png",
               height: 25,
             ),
-            Text(
-              "xpert",
-              style: TextStyle(fontFamily: 'Gellix-Black', color: HexColor("#133884"), fontWeight: FontWeight.bold),
-            ),
+            // Text(
+            //   "xpert",
+            //   style: TextStyle(fontFamily: 'Gellix-Black', color: HexColor("#133884"), fontWeight: FontWeight.bold),
+            // ),
           ],
         ),
       ),
@@ -41,7 +41,7 @@ class WidgetLandingAppBar extends StatelessWidget implements PreferredSizeWidget
                 child: Icon(Icons.notifications_active_outlined),
               ),
             )),
-        IconButton(onPressed: () {}, icon: Icon(Icons.dashboard_customize_outlined)),
+        // IconButton(onPressed: () {}, icon: Icon(Icons.dashboard_customize_outlined)),
         InkWell(
           onTap: () {
             Get.dialog(WidgetDisplayProfileDetails());

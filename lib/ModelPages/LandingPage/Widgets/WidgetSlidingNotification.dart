@@ -8,7 +8,7 @@ import 'package:hexcolor/hexcolor.dart';
 class WidgetSlidingNotificationPanel extends StatelessWidget {
   WidgetSlidingNotificationPanel({super.key});
 
-  LandingPageController landingPageController = Get.find();
+  final LandingPageController landingPageController = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -28,26 +28,32 @@ class WidgetSlidingNotificationPanel extends StatelessWidget {
           child: Card(
             elevation: 5,
             shadowColor: MyColors.buzzilygrey,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5.0),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
             child: Container(
               height: MediaQuery.of(context).size.height * .15,
               decoration: BoxDecoration(
-                //borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(5),
                 gradient: LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [HexColor("#FEFCFF"), HexColor("#F5F5F5")],
                 ),
               ),
-              child: Obx(() => Stack(
+              child: Obx(
+                () => GestureDetector(
+                  onTap: () {
+                    print(landingPageController.carouselIndex.value);
+                    landingPageController.fetchAndOpenWebView(landingPageController.carouselIndex.value);
+                  },
+                  child: Stack(
                     children: [
                       CarouselSlider(
-                        items: landingPageController.list,
+                        items: landingPageController.list.length > 5
+                            ? landingPageController.list.sublist(0, 5)
+                            : landingPageController.list,
                         carouselController: landingPageController.carouselController,
                         options: CarouselOptions(
-                          initialPage: landingPageController.carouselIndex.value ?? 0,
+                          initialPage: landingPageController.carouselIndex.value,
                           height: double.maxFinite,
                           autoPlay: true,
                           enlargeCenterPage: true,
@@ -62,7 +68,12 @@ class WidgetSlidingNotificationPanel extends StatelessWidget {
                         alignment: Alignment.bottomCenter,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: landingPageController.list.asMap().entries.map((entry) {
+                          children: (landingPageController.list.length > 5
+                                  ? landingPageController.list.sublist(0, 5)
+                                  : landingPageController.list)
+                              .asMap()
+                              .entries
+                              .map((entry) {
                             return GestureDetector(
                               onTap: () => landingPageController.carouselController.animateToPage(entry.key),
                               child: Container(
@@ -79,7 +90,9 @@ class WidgetSlidingNotificationPanel extends StatelessWidget {
                         ),
                       ),
                     ],
-                  )),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
